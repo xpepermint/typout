@@ -6,7 +6,10 @@ This is a simple output writer supporting memory and console streamlets out of t
 
 ```rs
 let mut out = Typout::console();
-out.write("Hello");
-out.write("World");
-out.flush(); // -> Hello World
+out.write("a");
+out.debug("b");
+out.info("c");
+out.warn("d");
+out.error("e");
+out.flush(); // -> abcde
 ```
