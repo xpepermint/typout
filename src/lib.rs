@@ -74,6 +74,10 @@ impl Typout {
         self.streamlet.flush()
     }
 
+    pub fn drain(&mut self) {
+        self.streamlet.drain();
+    }
+
     fn can_write(&self, verbosity: Verbosity) -> bool {
         self.verbosity.clone() as usize >= verbosity as usize
     }
@@ -84,12 +88,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn flushes_buffered_data() {
+    fn flushes_buffer() {
         let mut out = Typout::memory();
         out.write("11");
         out.write("22");
         out.write("33");
         assert_eq!(out.flush(), "112233");
+    }
+
+    #[test]
+    fn drains_buffer() {
+        let mut out = Typout::memory();
+        out.write("11");
+        out.write("22");
+        out.flush();
+        assert_eq!(out.flush(), "");
     }
 
     #[test]

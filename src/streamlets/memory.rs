@@ -30,4 +30,8 @@ impl Streamlet for Memory {
         self.chunks.clear();
         output
     }
+
+    fn drain(&mut self) {
+        self.chunks.clear();
+    }
 }

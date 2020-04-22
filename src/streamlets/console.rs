@@ -25,4 +25,8 @@ impl Streamlet for Console {
         print!("{}", output);
         output
     }
+
+    fn drain(&mut self) {
+        self.chunks.clear();
+    }
 }
