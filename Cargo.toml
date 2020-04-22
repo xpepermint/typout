@@ -1,0 +1,10 @@
+[package]
+name = "typout"
+description = "Typewriter output stream."
+license = "MIT"
+version = "0.1.0"
+authors = ["Kristijan Sedlak <xpepermint@gmail.com>"]
+edition = "2018"
+documentation = "https://github.com/xpepermint/typout"
+homepage = "https://github.com/xpepermint/typout"
+repository = "https://github.com/xpepermint/typout"
