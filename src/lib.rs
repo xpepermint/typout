@@ -1,6 +1,7 @@
 mod streamlets;
 mod verbosity;
 
+use ansistr::{clean_str};
 pub use crate::streamlets::Streamlet;
 pub use crate::streamlets::console::Console;
 pub use crate::streamlets::memory::Memory;
@@ -9,6 +10,7 @@ pub use crate::verbosity::Verbosity;
 pub struct Typout {
     streamlet: Box<dyn Streamlet>,
     verbosity: Verbosity,
+    stripansi: bool,
 }
 
 impl Typout {
@@ -17,6 +19,7 @@ impl Typout {
         Self {
             streamlet,
             verbosity: Verbosity::Debug,
+            stripansi: false,
         }
     }
 
@@ -24,6 +27,7 @@ impl Typout {
         Self {
             streamlet: Box::new(Console::new()),
             verbosity: Verbosity::Debug,
+            stripansi: false,
         }
     }
 
@@ -31,6 +35,7 @@ impl Typout {
         Self {
             streamlet: Box::new(Memory::new()),
             verbosity: Verbosity::Debug,
+            stripansi: false,
         }
     }
 
@@ -38,35 +43,43 @@ impl Typout {
         &self.verbosity
     }
 
+    pub fn stripansi(&self) -> &bool {
+        &self.stripansi
+    }
+
     pub fn set_verbosity(&mut self, verbosity: Verbosity) {
         self.verbosity = verbosity;
     }
 
+    pub fn set_stripansi(&mut self, strip: bool) {
+        self.stripansi = strip;
+    }
+
     pub fn write<S: Into<String>>(&mut self, txt: S) {
-        self.streamlet.write(txt.into());
+        self.streamlet.write(self.normalize(txt.into()));
     }
 
     pub fn debug<S: Into<String>>(&mut self, txt: S) {
         if self.can_write(Verbosity::Debug) {
-            self.streamlet.write(txt.into());
+            self.streamlet.write(self.normalize(txt.into()));
         }
     }
 
     pub fn info<S: Into<String>>(&mut self, txt: S) {
         if self.can_write(Verbosity::Info) {
-            self.streamlet.write(txt.into());
+            self.streamlet.write(self.normalize(txt.into()));
         }
     }
 
     pub fn warn<S: Into<String>>(&mut self, txt: S) {
         if self.can_write(Verbosity::Warning) {
-            self.streamlet.write(txt.into());
+            self.streamlet.write(self.normalize(txt.into()));
         }
     }
 
     pub fn error<S: Into<String>>(&mut self, txt: S) {
         if self.can_write(Verbosity::Error) {
-            self.streamlet.write(txt.into());
+            self.streamlet.write(self.normalize(txt.into()));
         }
     }
 
@@ -80,6 +93,13 @@ impl Typout {
 
     fn can_write(&self, verbosity: Verbosity) -> bool {
         self.verbosity.clone() as usize >= verbosity as usize
+    }
+
+    fn normalize(&self, txt: String) -> String {
+        match self.stripansi {
+            true => clean_str(txt),
+            false => txt,
+        }
     }
 }
 
@@ -101,8 +121,19 @@ mod tests {
         let mut out = Typout::memory();
         out.write("11");
         out.write("22");
-        out.flush();
+        out.drain();
         assert_eq!(out.flush(), "");
+    }
+
+    #[test]
+    fn strips_ansi() {
+        let mut out = Typout::memory();
+        out.set_stripansi(false);
+        out.write("1\x1B[1m2");
+        assert_eq!(out.flush(), "1\x1B[1m2");
+        out.set_stripansi(true);
+        out.write("1\x1B[1m2");
+        assert_eq!(out.flush(), "12");
     }
 
     #[test]
