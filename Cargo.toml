@@ -2,7 +2,7 @@
 name = "typout"
 description = "Typewriter output stream."
 license = "MIT"
-version = "0.1.3"
+version = "0.2.0"
 authors = ["Kristijan Sedlak <xpepermint@gmail.com>"]
 edition = "2018"
 documentation = "https://github.com/xpepermint/typout"
@@ -10,4 +10,9 @@ homepage = "https://github.com/xpepermint/typout"
 repository = "https://github.com/xpepermint/typout"
 
 [dependencies]
-ansistr = "0.1.1"
+async-std = { version = "^1.6.2", features = ["unstable"] }
+ansistr = "^0.1.1"
+term = "^0.6.1"
+
+[dev-dependencies]
+async-std = { version = "^1.6.2", features = ["attributes", "unstable"] }
