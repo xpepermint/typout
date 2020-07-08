@@ -150,10 +150,9 @@ fn start_spinner_thread(id: &str, data: &str, output: Sender<OutputIntent>, rece
                     SpinnerIntent::Exit => break,
                 }
             }
-            let frame = spinner.take_frame();
-            let message = format!("{} {}", frame, data);
+            let message = spinner.next_message(&data);
             output.send(OutputIntent::Pin(id.clone(), message)).unwrap();
-            sleep(Duration::from_millis(30));
+            spinner.sleep(); // delay next frame with speed
         }
         output.send(OutputIntent::Unpin(id)).unwrap();
         SPINNER_THREADS_COUNT.fetch_sub(1, Ordering::SeqCst);
