@@ -14,9 +14,12 @@ fn main() {
     out.set_spinner(spinner);
 
     loop {
+        out.write(&format!(" started {:?} seconds ago\n", now.elapsed().as_secs()));
         out.write("Tick");
         out.write(&format!(" started {:?} seconds ago\n", now.elapsed().as_secs()));
         out.flush();
+
+        out.print("Running simulation:\n");
 
         out.pin("a", "Pin message A\n");
         std::thread::sleep(Duration::from_secs(1));

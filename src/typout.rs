@@ -68,6 +68,15 @@ impl Typout {
         self.output.send(OutputIntent::Flush).unwrap();
     }
 
+    /// Appends data to the output buffer and calls the `flush()` method.
+    pub fn print<D>(&mut self, data: D)
+        where
+        D: Into<String>,
+    {
+        self.write(data.into());
+        self.flush();
+    }
+
     /// Creates a new pinned message or updates an existing one. Pinned messages
     /// always stayed visible at the end of the output stream. An arbitrary
     /// number of pinned messages is allowed. Pins are uniquely identified by
