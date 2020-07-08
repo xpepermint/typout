@@ -1,26 +1,24 @@
-> Typewriter output stream.
+> Command-line typewriter output stream.
 
-## Example
+This crate provides a wrapper around the stdout and allows for writing messages to the terminal output.
+
+## Usage
 
 ```rs
-let mut out = Console::default();
-// getters
-out.speed();
-out.chars();
-out.verbosity();
-out.stripansi(false);
-// setters
-out.set_spinner_speed(30);
-out.set_spinner_chars(vec!["|", "-"]);
-out.set_verbosity(Verbosity::Debug);
-out.set_stripansi(false);
-// operations
-out.write("a");
-out.debug("b");
-out.info("c");
-out.warn("d");
-out.error("e");
-out.flush(); // -> abcde
-out.spin("Loading ..."); // animation
-out.progress(100, 20, "Loading ..."); // animation
+let mut out = Typout::default();
+
+// write a simple message
+out.write("Hello");
+out.write(" World!");
+out.flush(); // -> Hello World!
+
+// pin/unpin a message to the end
+out.pin("ID1", "Please wait ...");
+out.unpin("ID1");
+
+// spin/unpin an animated message to the end
+out.spin("ID2", "Processing ...");
+out.unpin("ID1");
 ```
+
+Se it in action by running `cargo run --example simulate`.

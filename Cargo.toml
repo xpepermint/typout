@@ -1,6 +1,6 @@
 [package]
 name = "typout"
-description = "Typewriter output stream."
+description = "Command-line typewriter output stream."
 license = "MIT"
 version = "0.2.0"
 authors = ["Kristijan Sedlak <xpepermint@gmail.com>"]
@@ -8,11 +8,7 @@ edition = "2018"
 documentation = "https://github.com/xpepermint/typout"
 homepage = "https://github.com/xpepermint/typout"
 repository = "https://github.com/xpepermint/typout"
+readme = "README.md"
 
 [dependencies]
-async-std = { version = "^1.6.2", features = ["unstable"] }
-ansistr = "^0.1.1"
-term = "^0.6.1"
-
-[dev-dependencies]
-async-std = { version = "^1.6.2", features = ["attributes", "unstable"] }
+crossterm = "^0.17.6"

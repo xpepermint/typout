@@ -1,9 +1,11 @@
-mod console;
+mod output;
+mod output_intent;
 mod spinner;
-mod spinner_state;
-mod verbosity;
+mod spinner_intent;
+mod typout;
 
-pub use console::Console;
+pub use output::*;
+pub use output_intent::*;
 pub use spinner::*;
-pub use spinner_state::*;
-pub use verbosity::*;
+pub use spinner_intent::*;
+pub use typout::*;
