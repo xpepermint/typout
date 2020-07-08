@@ -21,4 +21,4 @@ out.spin("ID2", "Processing ...");
 out.unpin("ID1");
 ```
 
-Se it in action by running `cargo run --example simulate`.
+See it in action by running `cargo run --example simulate`.
