@@ -27,12 +27,33 @@ pub struct Typout {
     /// Spinner animations are handled in separate threads thus all messages are
     /// sent from the terminal to each thread through a channel.
     spinners: HashMap<String, Sender<SpinnerIntent>>,
+    /// A custom spinner instance can be provided. The instance must implement
+    /// the clone trait since it will be cloned for every spawned thread.
+    spinner: Spinner,
 }
 
 impl Typout {
+    /// Creates a new Typout object with a configured spinner instance.
+    pub fn with_spinner(spinner: Spinner) -> Self {
+        let mut out = Self::default();
+        out.set_spinner(spinner);
+        out
+    }
+}
+
+impl Typout {
+    /// Sets the spinner instance.
+    pub fn set_spinner(&mut self, spinner: Spinner) {
+        self.spinner = spinner;
+    }
+
     /// Appends data to the output buffer.
-    pub fn write(&mut self, data: &str) {
-        self.output.send(OutputIntent::Write(data.to_string())).unwrap();
+    pub fn write<D>(&mut self, data: D)
+        where
+        D: Into<String>,
+    {
+        let data = data.into();
+        self.output.send(OutputIntent::Write(data)).unwrap();
     }
 
     /// Clears buffered output data.
@@ -51,30 +72,50 @@ impl Typout {
     /// always stayed visible at the end of the output stream. An arbitrary
     /// number of pinned messages is allowed. Pins are uniquely identified by
     /// the provided `id` parameter.
-    pub fn pin(&self, id: &str, data: &str) {
-        self.output.send(OutputIntent::Pin(id.to_string(), data.to_string())).unwrap();
+    pub fn pin<I, D>(&self, id: I, data: D)
+        where
+        I: Into<String>,
+        D: Into<String>,
+    {
+        let id = id.into();
+        let data = data.into();
+
+        self.output.send(OutputIntent::Pin(id, data)).unwrap();
     }
 
     /// Creates a new animated pinned message or updates an existing one. It
     /// spawns the spinner animation thread for each new `id`. If the spinner
     /// with the provided `id` already exists, then only the message is updated.
-    pub fn spin(&mut self, id: &str, data: &str) {
-        if !self.spinners.contains_key(id) {
+    pub fn spin<I, D>(&mut self, id: I, data: D)
+        where
+        I: Into<String>,
+        D: Into<String>,
+    {
+        let id = id.into();
+        let data = data.into();
+
+        if !self.spinners.contains_key(&id) {
             let (spinner_tx, spinner_rx) = channel::<SpinnerIntent>();
             self.spinners.insert(id.to_string(), spinner_tx);
-            start_spinner_thread(id, data, self.output.clone(), spinner_rx);
+            start_spinner_thread(self.spinner.clone(), &id, &data, self.output.clone(), spinner_rx);
         }
-        let spinner = self.spinners.get(id).unwrap();
+    
+        let spinner = self.spinners.get(&id).unwrap();
         spinner.send(SpinnerIntent::Write(data.to_string())).unwrap();
     }
 
     /// Removes a pinned message with the provided `id`. This method works for
     /// all pinned messages including animated spinners.
-    pub fn unpin(&mut self, id: &str) {
-        if self.spinners.contains_key(id) {
-            let spinner = self.spinners.get(id).unwrap();
+    pub fn unpin<I>(&mut self, id: I)
+        where
+        I: Into<String>,
+    {
+        let id = id.into();
+
+        if self.spinners.contains_key(&id) {
+            let spinner = self.spinners.get(&id).unwrap();
             spinner.send(SpinnerIntent::Exit).unwrap();
-            self.spinners.remove(id);
+            self.spinners.remove(&id);
         } else {
             self.output.send(OutputIntent::Unpin(id.to_string())).unwrap();
         }
@@ -92,6 +133,7 @@ impl Default for Typout {
         Self {
             output: output_tx,
             spinners: HashMap::new(),
+            spinner: Spinner::default(),
         }
     }    
 }
@@ -133,14 +175,13 @@ fn start_output_thread(receiver: Receiver<OutputIntent>) {
 }
 
 /// Spawns a new spinner animation thread.
-fn start_spinner_thread(id: &str, data: &str, output: Sender<OutputIntent>, receiver: Receiver<SpinnerIntent>) {
+fn start_spinner_thread(mut spinner: Spinner, id: &str, data: &str, output: Sender<OutputIntent>, receiver: Receiver<SpinnerIntent>) {
     SPINNER_THREADS_COUNT.fetch_add(1, Ordering::SeqCst);
 
     let id = id.to_string();
     let data = data.to_string();
 
     spawn(move || { // start spinner animation in a new thread
-        let mut spinner = Spinner::default();
         let mut data = data.to_string();
 
         loop {

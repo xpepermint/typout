@@ -3,7 +3,7 @@ use std::thread::sleep;
 
 /// Spinner provides animation frames which are used by the spinner animation
 /// thread to animate a pinned message.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Spinner {
     /// A sequence of characters which are used for animation. 
     frames: Vec<String>,
@@ -16,8 +16,12 @@ pub struct Spinner {
 
 impl Spinner {
     /// Sets animation frame sequence.
-    pub fn set_frames(&mut self, frames: Vec<String>) {
-        self.frames = frames;
+    pub fn set_frames<I, T>(&mut self, frames: I)
+        where
+        I: IntoIterator<Item = T>,
+        T: Into<String>,        
+    {
+        self.frames = frames.into_iter().map(Into::into).collect();
     }
 
     /// Sets animation speed. This attribute is used by the `sleep()` method.
@@ -34,10 +38,13 @@ impl Spinner {
     }
 
     /// Returns a formated message of the next animation frame.
-    pub fn next_message(&mut self, data: &str) -> String {
+    pub fn next_message<M>(&mut self, data: M) -> String
+        where
+        M: Into<String>,
+    {
         self.tpl.clone()
             .replace("#{frame}", &self.next_frame())
-            .replace("#{message}", data)
+            .replace("#{message}", &data.into())
     }
 
     /// Blocks the thread for the number of ms based on the speed variable.
